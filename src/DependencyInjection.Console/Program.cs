@@ -1,4 +1,5 @@
 ﻿using System;
+using Autofac;
 using DependencyInjection.Console.CharacterWriters;
 using DependencyInjection.Console.SquarePainters;
 using NDesk.Options;
@@ -23,12 +24,23 @@ namespace DependencyInjection.Console
             };
             optionSet.Parse(args);
 
-            var characterWriter = GetCharacterWriter(useColors);
-            var patternWriter = new PatternWriter(characterWriter);
-            var squarePainter = GetSquarePainter(pattern);
-            var patternGenerator = new PatternGenerator(squarePainter);
 
-            var app = new PatternApp(patternWriter, patternGenerator);
+            var builder = new ContainerBuilder();
+            builder
+                .RegisterType<PatternWriter>();
+            builder
+                .RegisterType<PatternGenerator>();
+            builder
+                .RegisterType<PatternApp>();
+            builder
+                .Register((c, p) => GetCharacterWriter(useColors))
+                .As<ICharacterWriter>();
+            builder.Register((c, p) => GetSquarePainter(pattern))
+                .As<ISquarePainter>();
+
+            var container = builder.Build();
+
+            var app = container.Resolve<PatternApp>();
             app.Run(width, height);
         }
 
