@@ -8,6 +8,8 @@ namespace DependencyInjection.Console
 {
     internal class Program
     {
+
+
         private static void Main(string[] args)
         {
             var useColors = false;
@@ -24,45 +26,13 @@ namespace DependencyInjection.Console
             };
             optionSet.Parse(args);
 
-
             var builder = new ContainerBuilder();
-            builder
-                .RegisterType<PatternWriter>();
-            builder
-                .RegisterType<PatternGenerator>();
-            builder
-                .RegisterType<PatternApp>();
-            builder
-                .Register((c, p) => GetCharacterWriter(useColors))
-                .As<ICharacterWriter>();
-            builder.Register((c, p) => GetSquarePainter(pattern))
-                .As<ISquarePainter>();
+            builder.RegisterModule(new PatternAppModule(useColors, pattern));
 
             var container = builder.Build();
 
             var app = container.Resolve<PatternApp>();
             app.Run(width, height);
-        }
-
-        private static ICharacterWriter GetCharacterWriter(bool useColors)
-        {
-            var writer = new AsciiWriter();
-            return useColors ? (ICharacterWriter) new ColorWriter(writer) : writer;
-        }
-
-        private static ISquarePainter GetSquarePainter(string pattern)
-        {
-            switch (pattern)
-            {
-                case "circle":
-                    return new CircleSquarePainter();
-                case "oddeven":
-                    return new OddEvenSquarePainter();
-                case "white":
-                    return new WhiteSquarePainter();
-                default:
-                    throw new ArgumentException($"Pattern '{pattern}' not found!");
-            }
         }
     }
 }
